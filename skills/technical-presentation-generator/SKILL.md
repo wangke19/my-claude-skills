@@ -177,14 +177,17 @@ document.getElementById('langToggle').addEventListener('click', toggleLang);
 **CSS:**
 
 ```css
-/* Default: English visible */
+/* IMPORTANT: Default language is ENGLISH */
+/* English visible by default, Chinese hidden */
 .zh { display: none; }
 .en { display: block; }
 
-/* When Chinese selected */
+/* When Chinese toggle clicked, add 'lang-zh' class to body */
 body.lang-zh .zh { display: block; }
 body.lang-zh .en { display: none; }
 ```
+
+**Key Point:** English is the default language. Chinese appears only when user clicks the language toggle button.
 
 ### 4. Slide Structure Patterns
 
@@ -471,7 +474,24 @@ slideCounter.textContent = `${slideNum}/${total}`;
 
 **Solution:** Always add date in YYYY/MM format on first slide.
 
-### ❌ Mistake 5: Inconsistent Language Classes
+### ❌ Mistake 5: Wrong Default Language
+
+**Problem:** Setting Chinese as default instead of English.
+
+**Solution:**
+```css
+/* CORRECT: English default */
+.zh { display: none; }
+.en { display: block; }
+
+/* WRONG: Chinese default */
+.zh { display: block; }  /* ❌ Don't do this! */
+.en { display: none; }
+```
+
+English should ALWAYS be the default language for international accessibility.
+
+### ❌ Mistake 6: Inconsistent Language Classes
 
 **Problem:** Some links or small text without language wrappers show wrong language.
 
@@ -491,7 +511,8 @@ slideCounter.textContent = `${slideNum}/${total}`;
 
 - [ ] Title slide with date (YYYY/MM)
 - [ ] Language toggle button
-- [ ] Slide counter (XX/Total)
+- [ ] **English as default language** (.en display: block, .zh display: none)
+- [ ] Slide counter (XX/Total) - dynamic, not hardcoded
 - [ ] Keyboard navigation (arrows, Home, End)
 - [ ] All content has language classes
 - [ ] Code blocks with syntax highlighting
@@ -593,16 +614,18 @@ You: [Create single HTML file with]:
 **Before delivery:**
 
 1. Open in browser: `firefox presentation.html`
-2. Test language toggle (should switch all content)
-3. Test keyboard navigation (arrows, Home, End)
-4. Scroll through all slides (counter should update)
-5. Check slide numbers match total
-6. Verify all code blocks are readable
-7. Test on different screen sizes
-8. Verify no console errors (F12)
+2. **Verify English is default** (should show English text initially)
+3. Test language toggle (should switch all content to Chinese)
+4. Test keyboard navigation (arrows, Home, End)
+5. Scroll through all slides (counter should update)
+6. Check slide numbers match total
+7. Verify all code blocks are readable
+8. Test on different screen sizes
+9. Verify no console errors (F12)
 
 **Checklist:**
 - [ ] All X slides present
+- [ ] **English is default language** (verify on page load)
 - [ ] Language toggle works on every slide
 - [ ] No hardcoded slide counts
 - [ ] Date on title slide (YYYY/MM)
