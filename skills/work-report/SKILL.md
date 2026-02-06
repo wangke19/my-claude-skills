@@ -64,7 +64,7 @@ Don't use when:
 
 ## Implementation
 
-### Step 1: Parse User Request
+### Step 1: Parse User Request and Detect Jira Username
 
 ```python
 # Determine report type from user input
@@ -76,6 +76,18 @@ elif "quarterly" in user_request or "quarter" in user_request:
     report_type = "quarterly"
 elif "yearly" in user_request or "year" in user_request:
     report_type = "yearly"
+
+# Detect Jira username (IMPORTANT: needed to filter user's issues only)
+# Try multiple methods:
+# 1. Environment variable JIRA_USERNAME
+# 2. Git config user.email → extract username portion
+# 3. Ask user if not found
+jira_username = os.environ.get("JIRA_USERNAME")
+
+if not jira_username:
+    # Try to extract from git config email (e.g., kewang@redhat.com → wk2019)
+    # Or use currentUser() JQL function
+    jira_username = "currentUser()"  # Jira's built-in function for current user
 ```
 
 ### Step 2: Calculate Date Range
@@ -89,26 +101,35 @@ report_date = today.strftime("%Y-%m-%d")
 # Calculate start date based on report type
 if report_type == "daily":
     start_date = report_date
-    jira_jql = f"updated >= '{report_date}'"
+    jira_jql = f"assignee = {jira_username} AND updated >= '{report_date}'"
     github_query = f"author:@me updated:>={report_date}"
 
 elif report_type == "weekly":
     start_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
-    jira_jql = "updated >= -7d"
+    jira_jql = f"assignee = {jira_username} AND updated >= -7d"
     github_query = f"author:@me updated:>={start_date}"
 
 elif report_type == "quarterly":
     start_date = (today - timedelta(days=90)).strftime("%Y-%m-%d")
-    jira_jql = "updated >= -90d"
+    jira_jql = f"assignee = {jira_username} AND updated >= -90d"
     github_query = f"author:@me updated:>={start_date}"
 
 elif report_type == "yearly":
     start_date = (today - timedelta(days=365)).strftime("%Y-%m-%d")
-    jira_jql = "updated >= -365d"
+    jira_jql = f"assignee = {jira_username} AND updated >= -365d"
     github_query = f"author:@me updated:>={start_date}"
 ```
 
 ### Step 3: Fetch Jira Data
+
+**IMPORTANT:** Always filter by assignee to get only the user's issues!
+
+**Detect Jira username:**
+```javascript
+// Try to get Jira username from environment or git config
+// Common patterns: wk2019, username from git config
+const jiraUsername = process.env.JIRA_USERNAME || "currentUser()";
+```
 
 **Call Jira MCP server:**
 
@@ -116,9 +137,12 @@ elif report_type == "yearly":
 // Use ToolSearch to load Jira MCP tool if not already loaded
 await ToolSearch({ query: "select:mcp__jira__jira_search" });
 
+// IMPORTANT: Add assignee filter to JQL query
+const jqlWithAssignee = `assignee = ${jiraUsername} AND ${jira_jql}`;
+
 // Fetch Jira issues
 const jiraResult = await mcp__jira__jira_search({
-    jql: jira_jql,
+    jql: jqlWithAssignee,
     fields: "key,summary,status,updated,assignee,issuetype,priority",
     limit: 50
 });
