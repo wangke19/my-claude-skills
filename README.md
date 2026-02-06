@@ -24,6 +24,35 @@ Creates self-contained HTML presentation files with bilingual support, professio
 
 See [skills/technical-presentation-generator/SKILL.md](skills/technical-presentation-generator/SKILL.md) for full documentation.
 
+### 2. work-report
+
+Automatically generates daily, weekly, quarterly, or yearly work reports by orchestrating Jira and GitHub MCP servers.
+
+**Use when:**
+- Generating daily standup reports
+- Creating weekly status updates
+- Preparing quarterly reviews
+- Year-end retrospectives
+- Need unified Jira + GitHub activity view
+
+**Features:**
+- Multiple report types (daily, weekly, quarterly, yearly)
+- Three output formats (Markdown, Brief text, CherryTree)
+- Automatic data aggregation from Jira and GitHub
+- Organized file structure by year/month/week
+- Optional encrypted CherryTree database
+- Graceful error handling
+
+**Example:**
+```
+User: "generate daily report"
+→ Fetches Jira issues + GitHub PRs for today
+→ Generates 3 report files in ~/work/work-reports/
+→ Ready for standups in 2 minutes!
+```
+
+See [skills/work-report/SKILL.md](skills/work-report/SKILL.md) for full documentation.
+
 ## Installation
 
 ### For Claude Code Users
@@ -70,8 +99,12 @@ Claude: [Automatically uses technical-presentation-generator skill]
 ```
 my-claude-skills/
 ├── README.md                           # This file
+├── USAGE.md                            # Usage guide
 ├── skills/                             # All skills
-│   └── technical-presentation-generator/
+│   ├── technical-presentation-generator/
+│   │   ├── SKILL.md                    # Main skill documentation
+│   │   └── README.md                   # Skill-specific readme
+│   └── work-report/
 │       ├── SKILL.md                    # Main skill documentation
 │       └── README.md                   # Skill-specific readme
 └── .gitignore                          # Git ignore rules
@@ -98,6 +131,12 @@ This is a personal repository, but suggestions are welcome!
 These skills are shared for internal Red Hat use and community benefit.
 
 ## Version History
+
+- **2026-02-06**: Added work-report skill
+  - Daily, weekly, quarterly, yearly report generation
+  - Orchestrates Jira + GitHub + Report Generator MCP servers
+  - Three output formats (Markdown, Brief, CherryTree)
+  - Comprehensive documentation and error handling
 
 - **2026-02-04**: Initial release with technical-presentation-generator skill
   - Tested and validated with multiple presentations
