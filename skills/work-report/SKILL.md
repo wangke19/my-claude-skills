@@ -64,7 +64,7 @@ Don't use when:
 
 ## Implementation
 
-### Step 1: Parse User Request and Detect Jira Username
+### Step 1: Parse User Request and Get User Information from Environment
 
 ```python
 # Determine report type from user input
@@ -77,17 +77,15 @@ elif "quarterly" in user_request or "quarter" in user_request:
 elif "yearly" in user_request or "year" in user_request:
     report_type = "yearly"
 
-# Detect Jira username (IMPORTANT: needed to filter user's issues only)
-# Try multiple methods:
-# 1. Environment variable JIRA_USERNAME
-# 2. Git config user.email → extract username portion
-# 3. Ask user if not found
-jira_username = os.environ.get("JIRA_USERNAME")
+# Get user information from environment variables
+# JENKINS_USER_ID - Used for Jira username (e.g., "kewang")
+# GITHUB_USER_ID - Used for GitHub username (e.g., "wangke19")
+jira_username = os.environ.get("JENKINS_USER_ID", "currentUser()")
+github_username = os.environ.get("GITHUB_USER_ID", "@me")
 
-if not jira_username:
-    # Try to extract from git config email (e.g., kewang@redhat.com → wk2019)
-    # Or use currentUser() JQL function
-    jira_username = "currentUser()"  # Jira's built-in function for current user
+# Note: If environment variables are not set, fallback to:
+# - "currentUser()" for Jira (uses authenticated user)
+# - "@me" for GitHub (uses authenticated user)
 ```
 
 ### Step 2: Calculate Date Range
@@ -99,36 +97,37 @@ today = datetime.now()
 report_date = today.strftime("%Y-%m-%d")
 
 # Calculate start date based on report type
+# IMPORTANT: Include QA Contact field in Jira query to capture issues you're testing
 if report_type == "daily":
     start_date = report_date
-    jira_jql = f"assignee = {jira_username} AND updated >= '{report_date}'"
-    github_query = f"author:@me updated:>={report_date}"
+    jira_jql = f"updated >= '{report_date}' AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    github_query = f"involves:{github_username} updated:>={report_date}"
 
 elif report_type == "weekly":
     start_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
-    jira_jql = f"assignee = {jira_username} AND updated >= -7d"
-    github_query = f"author:@me updated:>={start_date}"
+    jira_jql = f"updated >= -7d AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    github_query = f"involves:{github_username} updated:>={start_date}"
 
 elif report_type == "quarterly":
     start_date = (today - timedelta(days=90)).strftime("%Y-%m-%d")
-    jira_jql = f"assignee = {jira_username} AND updated >= -90d"
-    github_query = f"author:@me updated:>={start_date}"
+    jira_jql = f"updated >= -90d AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    github_query = f"involves:{github_username} updated:>={start_date}"
 
 elif report_type == "yearly":
     start_date = (today - timedelta(days=365)).strftime("%Y-%m-%d")
-    jira_jql = f"assignee = {jira_username} AND updated >= -365d"
-    github_query = f"author:@me updated:>={start_date}"
+    jira_jql = f"updated >= -365d AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    github_query = f"involves:{github_username} updated:>={start_date}"
 ```
 
 ### Step 3: Fetch Jira Data
 
-**IMPORTANT:** Always filter by assignee to get only the user's issues!
+**IMPORTANT:** Filter by assignee, reporter, AND QA Contact to capture all work!
 
-**Detect Jira username:**
+**Get Jira username from environment:**
 ```javascript
-// Try to get Jira username from environment or git config
-// Common patterns: wk2019, username from git config
-const jiraUsername = process.env.JIRA_USERNAME || "currentUser()";
+// JENKINS_USER_ID is the standard environment variable for Jira username
+const jiraUsername = process.env.JENKINS_USER_ID || "currentUser()";
+const githubUsername = process.env.GITHUB_USER_ID || "@me";
 ```
 
 **Call Jira MCP server:**
@@ -137,12 +136,13 @@ const jiraUsername = process.env.JIRA_USERNAME || "currentUser()";
 // Use ToolSearch to load Jira MCP tool if not already loaded
 await ToolSearch({ query: "select:mcp__jira__jira_search" });
 
-// IMPORTANT: Add assignee filter to JQL query
-const jqlWithAssignee = `assignee = ${jiraUsername} AND ${jira_jql}`;
+// IMPORTANT: Include assignee, reporter, AND QA Contact in JQL query
+// This captures: assigned issues, reported issues, and QA testing work
+const jql = jira_jql;  // Already includes the complete filter from Step 2
 
 // Fetch Jira issues
 const jiraResult = await mcp__jira__jira_search({
-    jql: jqlWithAssignee,
+    jql: jql,
     fields: "key,summary,status,updated,assignee,issuetype,priority",
     limit: 50
 });
@@ -171,9 +171,10 @@ const jiraData = { issues: jiraIssues };
 // Use ToolSearch to load GitHub MCP tool if not already loaded
 await ToolSearch({ query: "select:mcp__github__search_pull_requests" });
 
-// Fetch GitHub PRs
+// Fetch GitHub PRs using the query built in Step 2
+// Query uses "involves:{username}" to capture PRs you authored, reviewed, or were mentioned in
 const githubResult = await mcp__github__search_pull_requests({
-    query: github_query,
+    query: github_query,  // e.g., "involves:wangke19 updated:>=2026-02-09"
     perPage: 50
 });
 ```
@@ -212,12 +213,18 @@ const githubData = { prs: githubPRs };
 // Use ToolSearch to load report generator MCP tool
 await ToolSearch({ query: "select:mcp__work-report-generator__generate_daily_report" });
 
+// Get user display name from git config or environment
+const userDisplayName = process.env.GIT_AUTHOR_NAME || "Unknown User";
+
 // Generate all report formats
+// NOTE: Currently the MCP server hardcodes "Ke Wang" in the report header
+// A PR should be created to accept user_name parameter
 const result = await mcp__work_report_generator__generate_daily_report({
     date: report_date,
     jira_data: jiraData,
     github_data: githubData,
-    report_format: "all"  // Generates: Markdown, Brief, CherryTree
+    report_format: "all",  // Generates: Markdown, Brief, CherryTree
+    user_name: userDisplayName  // TODO: MCP server needs to be updated to accept this
 });
 ```
 
