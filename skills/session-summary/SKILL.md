@@ -214,23 +214,134 @@ Would you like me to:
 4. ❌ Keep current name
 ```
 
-### Step 7: Apply Session Rename (if approved)
+### Step 7: Persist Session Summary (Hybrid Approach)
+
+**IMPORTANT**: This skill uses a hybrid approach for maximum compatibility with ccsm (Claude Code Session Manager):
+
+1. **Quick metadata** → Append to `.jsonl` file for fast title lookup
+2. **Full summary** → Write to `~/.claude/summaries/` for detailed view
+
+#### Step 7A: Write Metadata to Session JSONL
+
+Append a metadata entry to the current session's JSONL file:
 
 ```bash
-# The session rename mechanism depends on Claude Code's internal structure
-# This may require:
+# Find current session file (most recently modified JSONL in projects)
+SESSION_FILE=$(find ~/.claude/projects -name "*.jsonl" -type f | xargs ls -t | head -1)
 
-# Option 1: Update session metadata file directly
-# (Requires identifying the session file format)
+# Extract session ID from filename
+SESSION_ID=$(basename "$SESSION_FILE" .jsonl)
 
-# Option 2: Use Claude Code CLI command (if available)
-# claude session rename "new-name"
+# Prepare metadata entry
+METADATA_ENTRY=$(cat <<EOF
+{"type":"metadata","sessionId":"${SESSION_ID}","timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","summary":{"title":"${GENERATED_TITLE}","topics":${TOPICS_JSON},"wordCount":${WORD_COUNT}}}
+EOF
+)
 
-# Option 3: Update session title in JSON/JSONL
-# jq '.title = "new-name"' session.json > session_updated.json
+# Append to session file
+echo "$METADATA_ENTRY" >> "$SESSION_FILE"
+```
 
-# NOTE: The exact mechanism needs to be discovered by examining
-# the Claude Code session storage format
+**Field Specifications:**
+- `type`: Always "metadata" (distinguishes from user/assistant messages)
+- `sessionId`: Extract from filename (UUID format)
+- `timestamp`: ISO 8601 format in UTC
+- `summary.title`: The 20-30 word generated session name
+- `summary.topics`: JSON array of topic strings (e.g., ["claude-code", "git-workflow"])
+- `summary.wordCount`: Integer count for validation
+
+**Example metadata entry:**
+```json
+{
+  "type": "metadata",
+  "sessionId": "abc123-def456-ghi789",
+  "timestamp": "2026-03-03T09:30:45Z",
+  "summary": {
+    "title": "Created session-summary skill for Claude Code enabling automated conversation analysis and intelligent 20-30 word descriptive naming with comprehensive documentation",
+    "topics": ["claude-code", "skill-development", "session-management"],
+    "wordCount": 27
+  }
+}
+```
+
+#### Step 7B: Write Full Summary to External File
+
+Create comprehensive summary file in `~/.claude/summaries/`:
+
+```bash
+# Create summaries directory
+mkdir -p ~/.claude/summaries
+
+# Prepare full summary JSON
+SUMMARY_FILE=~/.claude/summaries/${SESSION_ID}.json
+
+cat > "$SUMMARY_FILE" <<EOF
+{
+  "sessionId": "${SESSION_ID}",
+  "generatedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "title": "${GENERATED_TITLE}",
+  "wordCount": ${WORD_COUNT},
+  "overview": "${OVERVIEW_PARAGRAPH}",
+  "topics": ${TOPICS_JSON},
+  "accomplishments": ${ACCOMPLISHMENTS_JSON},
+  "filesChanged": {
+    "created": ${FILES_CREATED_JSON},
+    "modified": ${FILES_MODIFIED_JSON},
+    "deleted": ${FILES_DELETED_JSON}
+  },
+  "toolsUsed": ${TOOLS_JSON},
+  "keyDecisions": ${DECISIONS_JSON},
+  "remainingWork": ${REMAINING_WORK_JSON},
+  "tags": ${TAGS_JSON},
+  "metrics": {
+    "duration": "${DURATION}",
+    "messageCount": ${MESSAGE_COUNT},
+    "commandsExecuted": ${COMMANDS_COUNT}
+  }
+}
+EOF
+```
+
+**Full Summary Schema:**
+```json
+{
+  "sessionId": "string (UUID)",
+  "generatedAt": "string (ISO 8601)",
+  "title": "string (20-30 words)",
+  "wordCount": "number",
+  "overview": "string (paragraph)",
+  "topics": ["string"],
+  "accomplishments": ["string"],
+  "filesChanged": {
+    "created": ["string"],
+    "modified": ["string"],
+    "deleted": ["string"]
+  },
+  "toolsUsed": [{"name": "string", "purpose": "string"}],
+  "keyDecisions": [{"decision": "string", "rationale": "string"}],
+  "remainingWork": ["string"],
+  "tags": ["string"],
+  "metrics": {
+    "duration": "string",
+    "messageCount": "number",
+    "commandsExecuted": "number"
+  }
+}
+```
+
+#### Step 7C: Confirm Persistence
+
+After writing both metadata and full summary:
+
+```bash
+echo "✅ Session summary persisted successfully!"
+echo ""
+echo "📝 Metadata appended to: $SESSION_FILE"
+echo "📊 Full summary written to: $SUMMARY_FILE"
+echo ""
+echo "Integration with ccsm:"
+echo "  • 'ccsm list' will show AI-generated title"
+echo "  • 'ccsm show ${SESSION_ID}' will display full summary"
 ```
 
 ## Session File Format Investigation
@@ -574,22 +685,42 @@ Use efficient phrasing:
 
 When implementing this skill:
 
-- [ ] Locate Claude Code session storage directory
-- [ ] Identify current session file/identifier
-- [ ] Determine session file format (JSON/JSONL/other)
+**Analysis Phase:**
 - [ ] Parse conversation history from context
 - [ ] Extract key topics using pattern matching
 - [ ] Identify files changed from conversation
 - [ ] List skills/tools used
-- [ ] Generate structured summary
+- [ ] Extract accomplishments and decisions
+
+**Generation Phase:**
+- [ ] Generate structured summary with all sections
 - [ ] Create descriptive session name with 20-30 words
-- [ ] Validate word count is within range
+- [ ] Validate word count is within range (20-30)
 - [ ] Adjust name if too short or too long
-- [ ] Present summary with word count
-- [ ] Handle user approval/rejection
-- [ ] Implement session rename logic
-- [ ] Test with various session types
+- [ ] Format topics as JSON array
+- [ ] Format all data for persistence
+
+**Persistence Phase (Hybrid Approach):**
+- [ ] Locate current session JSONL file in ~/.claude/projects/
+- [ ] Extract session ID from filename
+- [ ] Prepare metadata JSON entry
+- [ ] Append metadata to session JSONL file
+- [ ] Create ~/.claude/summaries/ directory if needed
+- [ ] Write full summary to ~/.claude/summaries/<session-id>.json
+- [ ] Verify both files were written successfully
+
+**Presentation Phase:**
+- [ ] Present summary with word count to user
+- [ ] Show file locations where data was saved
+- [ ] Mention ccsm integration benefits
 - [ ] Handle error cases gracefully
+
+**Testing:**
+- [ ] Test with various session types (development, debugging, documentation)
+- [ ] Verify metadata appears in ccsm list
+- [ ] Verify full summary loads in ccsm show
+- [ ] Test with sessions that have no previous metadata
+- [ ] Test error handling for write failures
 
 ## Example Output
 
@@ -678,6 +809,163 @@ Would you like me to apply this name to the session?
 4. **Implementation details** (8-12 words): Using JWT tokens, OAuth2, role-based access
 5. **Outcomes** (4-6 words): Improving performance by 70 percent
 
+## ccsm Integration
+
+This skill integrates seamlessly with **ccsm** (Claude Code Session Manager) for enhanced session discovery and management.
+
+### How Integration Works
+
+1. **session-summary generates data** → Writes both inline metadata and external summary files
+2. **ccsm reads metadata** → Displays AI-generated titles in list view
+3. **ccsm shows details** → Renders full structured summaries on demand
+
+### ccsm Commands Enhanced
+
+**Before Integration:**
+```bash
+$ ccsm list
+📅 Today (Mar 3)
+────────────────────────────────────
+  abc123  02:15  how can I see the skill in claude?
+          project: my-claude-skills  branch: main  msgs: 45
+```
+
+**After Integration:**
+```bash
+$ ccsm list
+📅 Today (Mar 3)
+────────────────────────────────────
+  abc123  02:15  Created session-summary skill for Claude Code enabling...
+          project: my-claude-skills  branch: main  msgs: 45
+          topics: claude-code, skill-development, session-management
+```
+
+**New Command - Full Summary:**
+```bash
+$ ccsm show abc123
+
+📊 Session Summary
+
+📋 Overview:
+Developed and deployed comprehensive session-summary skill for Claude Code
+enabling automated conversation analysis and intelligent 20-30 word session
+naming...
+
+🎯 Key Topics:
+• Claude Code session management
+• Skill development workflow
+• 20-30 word naming convention
+
+✅ Accomplishments:
+1. Created feature branch feature/session-summary-rename-skill
+2. Developed comprehensive SKILL.md with detailed implementation guide
+...
+
+📝 Files Changed:
+Created:
+• skills/session-summary/SKILL.md (689 lines)
+• skills/session-summary/README.md (93 lines)
+
+🔧 Tools Used:
+• Git - Branch creation and version control
+• Write - Created comprehensive skill documentation
+
+📈 Metrics:
+• Duration: Full development session
+• Messages: 45
+• Commands: 12+
+```
+
+### Setup Instructions
+
+**1. Install ccsm with summary support:**
+```bash
+# ccsm v0.2.0+ includes summary metadata parsing
+go install github.com/kewang/ccsm/cmd/ccsm@latest
+```
+
+**2. Use session-summary skill:**
+```bash
+# At end of work session
+/session-summary
+
+# Or ask Claude
+"summarize this session"
+```
+
+**3. View in ccsm:**
+```bash
+# List with AI-generated titles
+ccsm list
+
+# View full summary
+ccsm show <session-id>
+```
+
+### Data Flow Diagram
+
+```
+┌─────────────────────┐
+│  Claude Code        │
+│  Session            │
+└──────┬──────────────┘
+       │
+       │ User invokes
+       │ /session-summary
+       ▼
+┌─────────────────────┐
+│ session-summary     │
+│ skill analyzes      │
+│ conversation        │
+└──────┬──────────────┘
+       │
+       ├─────────────────────┐
+       │                     │
+       ▼                     ▼
+┌──────────────┐    ┌─────────────────┐
+│ Append to    │    │ Write full      │
+│ .jsonl       │    │ summary to      │
+│ (metadata)   │    │ ~/.claude/      │
+│              │    │ summaries/      │
+└──────┬───────┘    └────────┬────────┘
+       │                     │
+       │    ┌────────────────┘
+       │    │
+       ▼    ▼
+┌─────────────────────┐
+│  ccsm reads         │
+│  both sources       │
+└──────┬──────────────┘
+       │
+       ├─────────────────┐
+       │                 │
+       ▼                 ▼
+ ┌──────────┐     ┌──────────┐
+ │ ccsm     │     │ ccsm     │
+ │ list     │     │ show     │
+ │ (fast)   │     │ (detail) │
+ └──────────┘     └──────────┘
+```
+
+### File Locations
+
+```
+~/.claude/
+├── projects/
+│   └── <project-dir>/
+│       └── <session-id>.jsonl      # ← Metadata appended here
+└── summaries/
+    └── <session-id>.json           # ← Full summary written here
+```
+
+### Benefits
+
+✅ **Better Discovery**: Find sessions by meaningful descriptions, not first messages
+✅ **Rich Context**: View full summaries without opening Claude Code
+✅ **Fast Search**: ccsm can search across AI-generated topics and titles
+✅ **No Duplication**: Hybrid approach balances speed and detail
+✅ **Backward Compatible**: Works with old sessions that lack metadata
+
 ## Tips
 
 1. **Always count words:** Use `name.trim().split(/\s+/).length`
@@ -687,3 +975,6 @@ Would you like me to apply this name to the session?
 5. **Use active voice:** "Implemented" not "Was implemented"
 6. **Avoid filler:** Remove "in order to", "for the purpose of"
 7. **Test readability:** Should be clear without additional context
+8. **Run at session end:** Generate summaries before switching contexts
+9. **Verify persistence:** Check that both JSONL and summary files are written
+10. **Use with ccsm:** Install ccsm v0.2.0+ for full integration benefits
