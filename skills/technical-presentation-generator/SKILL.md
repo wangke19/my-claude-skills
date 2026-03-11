@@ -528,7 +528,8 @@ Use this for any Red Hat, OpenShift, or internal company presentations. The titl
             <span class="zh">TOPIC（中文）</span>
         </div>
         <div class="rh-meta">
-            <p class="mono" style="font-size:20px; margin-bottom:12px;">DATE (e.g. 2026年3月)</p>
+            <p class="mono en" style="font-size:20px; margin-bottom:12px;">DATE (e.g. March 2026)</p>
+            <p class="mono zh" style="font-size:20px; margin-bottom:12px;">DATE (e.g. 2026年3月)</p>
             <p>NAME</p>
             <p>TEAM / ROLE</p>
         </div>
