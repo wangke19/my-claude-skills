@@ -1,6 +1,6 @@
 ---
 name: technical-presentation-generator
-description: Use when creating technical presentation web pages with multiple slides, bilingual support, code examples, or complex visual requirements. Ideal for conference talks, team presentations, or technical documentation requiring slide-based navigation.
+description: This skill should be used when creating technical presentation web pages with multiple slides, bilingual support, code examples, or complex visual requirements. Ideal for conference talks, team presentations, or technical documentation requiring slide-based navigation. Also triggered when a user asks to "make slides fill the screen", "resize for projector", "auto-scale to resolution", or "full-viewport presentation".
 ---
 
 # Technical Presentation Generator
@@ -43,6 +43,8 @@ Don't use when:
 ✅ Inline styles and fonts (or self-hosted)
 ✅ Full control over layout and transitions
 ✅ Built-in language toggle with proper architecture
+✅ Full-viewport snap layout — each slide fills the screen exactly
+✅ Fluid typography via clamp() — auto-scales to any resolution
 ```
 
 ## Implementation Workflow
@@ -111,15 +113,45 @@ Before I create the presentation, I need to clarify:
         body.lang-zh .zh { display: block; }
         body.lang-zh .en { display: none; }
 
-        /* Slide layout */
-        .slide {
-            min-height: 100vh;
-            padding: 80px;
-            /* ... */
+        /* Full-viewport snap layout */
+        html { height: 100%; overflow: hidden; }
+        body {
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
         }
+
+        .slide {
+            height: 100vh;               /* exactly one screen */
+            scroll-snap-align: start;
+            scroll-snap-stop: always;    /* never skip slides */
+            padding: 80px 7vw 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;            /* clip overflowing content */
+        }
+        .slide > * { flex-shrink: 1; min-height: 0; }
+
+        /* Dividers: zero-height, invisible */
+        .divider { height: 0; border: none; margin: 0; }
+
+        /* Fluid typography — scales with viewport width */
+        h1 { font-size: clamp(32px, 4vw, 62px); }
+        h2 { font-size: clamp(22px, 2.6vw, 40px); }
+        h3 { font-size: clamp(15px, 1.5vw, 24px); }
+        p, li { font-size: clamp(13px, 1.15vw, 19px); }
+        .subtitle { font-size: clamp(14px, 1.4vw, 22px); }
 
         /* Navigation */
         .slide-counter { /* ... */ }
+
+        /* Stack to single column on narrow screens */
+        @media (max-width: 900px) {
+            .slide { padding: 70px 5vw 40px; }
+            .grid-2, .grid-3, .chart-heavy { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -137,8 +169,7 @@ Before I create the presentation, I need to clarify:
 
     <script>
         // Language toggle
-        // Slide navigation
-        // Scroll tracking
+        // Snap-aware slide navigation (see references/responsive-layout.md)
     </script>
 </body>
 </html>
@@ -326,72 +357,62 @@ body.lang-zh .en { display: none; }
 
 ### 6. Navigation System
 
-**JavaScript for smooth scrolling:**
+**IMPORTANT:** When using the full-viewport snap layout (recommended), `body` is the scroll container — not `window`. Use `body.scrollTo()` and listen on `body`, not `window`.
 
 ```javascript
 const slides = document.querySelectorAll('.slide');
-const slideCounter = document.getElementById('slideCounter');
+const scroller = document.body;   // snap container
 let currentSlide = 0;
 
 function updateSlideCounter() {
-    const slideNum = String(currentSlide + 1).padStart(2, '0');
-    const total = slides.length;
-    slideCounter.textContent = `${slideNum}/${total}`;
+    const num = String(currentSlide + 1).padStart(2, '0');
+    slideCounter.textContent = `${num}/${slides.length}`;
 }
 
 function scrollToSlide(index) {
-    if (index >= 0 && index < slides.length) {
-        currentSlide = index;
-        slides[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        updateSlideCounter();
-    }
+    if (index < 0 || index >= slides.length) return;
+    currentSlide = index;
+    scroller.scrollTo({ top: slides[index].offsetTop, behavior: 'smooth' });
+    updateSlideCounter();
 }
 
-// Keyboard navigation
-document.addEventListener('keydown', (e) => {
+// Keyboard: arrows, space, Home, End, F (fullscreen)
+document.addEventListener('keydown', function(e) {
     switch(e.key) {
-        case 'ArrowRight':
-        case 'ArrowDown':
-            scrollToSlide(currentSlide + 1);
-            break;
-        case 'ArrowLeft':
-        case 'ArrowUp':
-            scrollToSlide(currentSlide - 1);
-            break;
-        case 'Home':
-            scrollToSlide(0);
-            break;
-        case 'End':
-            scrollToSlide(slides.length - 1);
+        case 'ArrowRight': case 'ArrowDown': case ' ':
+            e.preventDefault(); scrollToSlide(currentSlide + 1); break;
+        case 'ArrowLeft': case 'ArrowUp':
+            e.preventDefault(); scrollToSlide(currentSlide - 1); break;
+        case 'Home': e.preventDefault(); scrollToSlide(0); break;
+        case 'End':  e.preventDefault(); scrollToSlide(slides.length - 1); break;
+        case 'f': case 'F':
+            document.fullscreenElement
+                ? document.exitFullscreen()
+                : document.documentElement.requestFullscreen();
             break;
     }
 });
 
-// Scroll tracking
-let scrollTimeout;
-window.addEventListener('scroll', () => {
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        // Find which slide is in view
-        let closest = 0;
-        let minDistance = Infinity;
-
-        slides.forEach((slide, index) => {
-            const rect = slide.getBoundingClientRect();
-            const distance = Math.abs(rect.top);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closest = index;
-            }
+// Scroll tracking — read body.scrollTop, not window.scrollY
+let scrollTimer;
+scroller.addEventListener('scroll', function() {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(function() {
+        const top = scroller.scrollTop;
+        let closest = 0, minDist = Infinity;
+        slides.forEach(function(slide, i) {
+            const dist = Math.abs(slide.offsetTop - top);
+            if (dist < minDist) { minDist = dist; closest = i; }
         });
-
         currentSlide = closest;
         updateSlideCounter();
-    }, 100);
+    }, 80);
 });
 
 updateSlideCounter();
 ```
+
+For full details including touch swipe support, see **`references/responsive-layout.md`**.
 
 ### 7. Visual Theme Selection
 
@@ -518,14 +539,17 @@ English should ALWAYS be the default language for international accessibility.
 - [ ] Title slide with date (YYYY/MM)
 - [ ] Language toggle button
 - [ ] **English as default language** (.en display: block, .zh display: none)
-- [ ] Slide counter (XX/Total) - dynamic, not hardcoded
-- [ ] Keyboard navigation (arrows, Home, End)
+- [ ] Slide counter (XX/Total) — dynamic, not hardcoded
+- [ ] Keyboard navigation (arrows, space, Home, End, F for fullscreen)
+- [ ] Touch swipe support
 - [ ] All content has language classes
 - [ ] Code blocks with syntax highlighting
 - [ ] Alert boxes styled
-- [ ] Dividers between slides
-- [ ] Progress tracking on scroll
-- [ ] Responsive design (min-height: 100vh per slide)
+- [ ] **Full-viewport snap layout** (`body` as scroll-snap container, `height: 100vh` per slide)
+- [ ] **Fluid typography** — all font sizes use `clamp(min, vw, max)`
+- [ ] **Dividers are zero-height** (no 1px dividers that break snap alignment)
+- [ ] Progress tracking on scroll (reads `body.scrollTop`)
+- [ ] Responsive breakpoint stacks grids to single column ≤ 900px
 
 ### File Structure
 
@@ -651,7 +675,8 @@ You: [Create single HTML file with]:
 4. **Test early**: Check language toggle before adding all content
 5. **Iterate on theme**: Get user feedback on visual style first
 6. **Code syntax**: Use `<span>` for keywords, not complex libraries
-7. **Mobile-friendly**: Use relative units (%, vh, vw) not fixed pixels
+7. **Viewport-relative units always**: Use `vw`, `vh`, `clamp()` — never fixed `px` for layout/typography
+8. **Press F to present**: The fullscreen shortcut turns any browser into a presentation tool
 
 ## When to Deviate
 
@@ -662,3 +687,9 @@ You: [Create single HTML file with]:
 - Tight deadline and boilerplate acceptable
 
 **Always inform user of trade-offs.**
+
+## Additional Resources
+
+### Reference Files
+
+- **`references/responsive-layout.md`** — Complete full-viewport snap layout pattern: CSS snap container setup, fluid `clamp()` typography table, viewport-relative spacing, snap-aware JS navigation, touch swipe, common mistakes, and a full checklist. Consult this whenever implementing or debugging responsive/viewport behavior.
