@@ -58,14 +58,20 @@ Before I create the presentation, I need to clarify:
 2. **Languages**: Which language pair? (Chinese/English, other?)
 3. **Visual Theme**: Any preference? (cyberpunk, minimal, corporate, tech-focused)
 4. **Code Examples**: What languages will appear? (Go, Python, YAML, etc.)
-5. **Content Ratio**: What balance per slide section?
+5. **Content Ratio**: The default ratios per slide section are:
    - Introduction slides: 60% text, 40% charts/visuals
    - Core content: 30% text, 70% charts/visuals
    - Summary slides: 50% text, 50% charts/visuals
+   Would you like to keep these defaults, or adjust any of them?
 6. **Key Topics**: What are the main sections/topics?
 ```
 
 **Why ask**: Different presentations need different structures. Conference talks differ from internal documentation. Getting this right saves rework.
+
+**Content Ratio guidance:**
+- Always present the three defaults explicitly and ask the user to confirm or adjust — do not silently apply defaults.
+- If the user adjusts ratios, record their preferences and apply them consistently across all slides of that type.
+- Common adjustments: data-heavy talks may want core content at 20% text / 80% visuals; executive briefings may prefer 50/50 throughout.
 
 ### 2. Create Structure Template
 
@@ -595,7 +601,11 @@ You: "Before I create the presentation, I need to clarify:
 2. Languages: Chinese/English bilingual?
 3. Visual theme: Technical/corporate/cyberpunk?
 4. Code examples: Go, YAML?
-5. Content ratio per section?
+5. Content ratio — the defaults are:
+   - Introduction slides: 60% text, 40% charts/visuals
+   - Core content: 30% text, 70% charts/visuals
+   - Summary slides: 50% text, 50% charts/visuals
+   Would you like to keep these, or adjust any of them?
 6. Key topics to cover?"
 
 [User responds]
