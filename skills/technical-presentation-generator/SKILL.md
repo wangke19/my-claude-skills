@@ -421,10 +421,132 @@ For full details including touch swipe support, see **`references/responsive-lay
 | Content Type | Suggested Theme | Colors |
 |--------------|----------------|--------|
 | DevOps/Cloud | Cyberpunk | Cyan, Magenta, Dark BG |
+| OpenShift/Red Hat | Red Hat Brand | `#cc0000` red, `#1d6f8a` teal, white |
 | Corporate | Minimal | Navy, White, Light Gray |
 | Data/Analytics | Tech | Blue, Green, Dark |
 | Security | Matrix | Green, Black |
 | General Tech | Modern | Varied, Clean |
+
+---
+
+### 8. OpenShift / Red Hat Title Slide Template
+
+Use this for any Red Hat, OpenShift, or internal company presentations. The title slide design (teal background + decorative circles + official logotype) is the **canonical OpenShift template** — topic, date, and presenter are the only things to change per presentation.
+
+**CSS to add (inside `<style>`):**
+
+```css
+:root {
+    --rh-red:    #ee0000;
+    --rh-orange: #f96d00;
+}
+
+/* Red Hat title slide */
+.rh-title-slide {
+    background: #1d6f8a;
+    position: relative;
+    overflow: hidden;
+}
+.rh-circle-tl {
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    background: var(--rh-orange);
+    opacity: 0.85;
+}
+.rh-circle-tr {
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: var(--rh-red);
+    opacity: 0.9;
+}
+.rh-circle-br {
+    position: absolute;
+    bottom: -100px; right: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: #6dbfcf;
+    opacity: 0.7;
+}
+.rh-circle-inner {
+    position: absolute;
+    top: -40px; left: -40px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    border: 40px solid rgba(255,255,255,0.15);
+}
+.rh-title-content {
+    position: relative;
+    z-index: 10;
+    padding: 5vh 7vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+.rh-logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: clamp(30px, 6vh, 80px);
+}
+.rh-logo-icon {
+    display: flex;
+    align-items: center;
+}
+.rh-main-title {
+    font-size: clamp(36px, 4.5vw, 68px);
+    font-weight: 700;
+    color: white;
+    line-height: 1.15;
+    margin-bottom: clamp(24px, 4vh, 60px);
+}
+.rh-meta { color: rgba(255,255,255,0.85); }
+.rh-meta p { font-size: clamp(16px, 1.5vw, 24px); margin-bottom: 6px; }
+```
+
+**HTML for the title slide — customize `TOPIC`, `DATE`, `NAME`, `TEAM`:**
+
+```html
+<div class="slide rh-title-slide" id="slide-1" style="padding:0; overflow:hidden;">
+    <div class="rh-circle-tl"></div>
+    <div class="rh-circle-inner"></div>
+    <div class="rh-circle-tr"></div>
+    <div class="rh-circle-br"></div>
+    <div class="rh-title-content">
+        <div class="rh-logo">
+            <div class="rh-logo-icon">
+                <!-- Official OpenShift logotype — icon + wordmark combined, no inline SVG -->
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/OpenShift-LogoType.svg"
+                     height="120" alt="OpenShift Logo" style="width:auto;">
+            </div>
+        </div>
+        <div class="rh-main-title">
+            <span class="en">TOPIC (English)</span>
+            <span class="zh">TOPIC（中文）</span>
+        </div>
+        <div class="rh-meta">
+            <p class="mono" style="font-size:20px; margin-bottom:12px;">DATE (e.g. 2026年3月)</p>
+            <p>NAME</p>
+            <p>TEAM / ROLE</p>
+        </div>
+    </div>
+</div>
+<div class="divider"></div>
+```
+
+**Critical rules for this template:**
+
+- ✅ The `.slide` itself uses `padding:0; overflow:hidden` — padding lives inside `.rh-title-content` (`5vh 7vw`) to avoid double-inset with the global `.slide` padding
+- ✅ Logo `height="120"` with `width:auto` — the logotype SVG is wide, never constrain its width
+- ✅ Logo container has **no** `overflow:hidden`, `border-radius`, or fixed `width` — these clip the wide logotype into a tiny circle
+- ✅ Use the Wikimedia logotype URL — it includes both the icon and "OpenShift" wordmark, no separate text label needed
+- ❌ Never draw the OpenShift logo as an inline `<svg><path>` — always use the official URL
+- ❌ Never add a separate "Red Hat / OpenShift" text next to the logo — the wordmark is embedded in the SVG
+
+---
 
 **Example cyberpunk theme:**
 
