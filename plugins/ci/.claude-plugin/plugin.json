@@ -1,0 +1,8 @@
+{
+  "name": "ci",
+  "description": "CI/CD helpers for Prow jobs and OpenShift CI",
+  "version": "1.0.0",
+  "author": {
+    "name": "kewang"
+  }
+}

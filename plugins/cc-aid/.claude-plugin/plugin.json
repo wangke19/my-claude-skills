@@ -1,0 +1,8 @@
+{
+  "name": "cc-aid",
+  "description": "Claude Code session management and quality-of-life helpers",
+  "version": "1.0.0",
+  "author": {
+    "name": "kewang"
+  }
+}

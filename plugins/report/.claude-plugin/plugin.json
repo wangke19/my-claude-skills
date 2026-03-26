@@ -1,0 +1,8 @@
+{
+  "name": "report",
+  "description": "Work report generation from Jira and GitHub data",
+  "version": "1.0.0",
+  "author": {
+    "name": "kewang"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "utils",
+  "description": "Utility skills for presentations, clipboard, and other productivity tools",
+  "version": "1.0.0",
+  "author": {
+    "name": "kewang"
+  }
+}

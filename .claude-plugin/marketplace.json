@@ -1,0 +1,38 @@
+{
+  "name": "my-claude-skills",
+  "owner": {
+    "name": "kewang"
+  },
+  "plugins": [
+    {
+      "name": "ask",
+      "source": "./plugins/ask",
+      "description": "Structured learning and analysis skills for understanding concepts, technologies, codebases, and making technical decisions",
+      "version": "1.0.0"
+    },
+    {
+      "name": "utils",
+      "source": "./plugins/utils",
+      "description": "Utility skills for presentations, clipboard, and other productivity tools",
+      "version": "1.0.0"
+    },
+    {
+      "name": "cc-aid",
+      "source": "./plugins/cc-aid",
+      "description": "Claude Code session management and quality-of-life helpers",
+      "version": "1.0.0"
+    },
+    {
+      "name": "report",
+      "source": "./plugins/report",
+      "description": "Work report generation from Jira and GitHub data",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ci",
+      "source": "./plugins/ci",
+      "description": "CI/CD helpers for Prow jobs and OpenShift CI",
+      "version": "1.0.0"
+    }
+  ]
+}
