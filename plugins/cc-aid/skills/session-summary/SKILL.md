@@ -1,6 +1,9 @@
 ---
 name: session-summary
 description: Automatically summarize the current Claude Code session and generate a meaningful session name with 20-30 words
+trigger:
+  - /session-summary
+  - when user says "summarize session", "rename session"
 allowed-tools: Bash(echo *), Bash(cat *), Bash(ls *), Read(*), Write(*)
 ---
 

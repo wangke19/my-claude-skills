@@ -8,7 +8,7 @@ Personal Claude Code plugin marketplace.
 |--------|-------------|--------|
 | **ask** | Structured learning and analysis | thing, tech, onboard, analyze-repo, deep-dive, design, debug, diff |
 | **utils** | Productivity tools | slack-copy-rich, technical-presentation-generator |
-| **cc-aid** | Claude Code helpers | session-summary |
+| **cc-aid** | Claude Code helpers | session-init, session-checkpoint, session-summary, session-postmortem |
 | **report** | Work report generation | work-report |
 | **ci** | CI/CD helpers | prow-job-retry |
 

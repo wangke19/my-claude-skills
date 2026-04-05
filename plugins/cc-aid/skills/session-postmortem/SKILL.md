@@ -1,9 +1,8 @@
 ---
-name: task-postmortem
+name: session-postmortem
 description: Convert completed tasks into reusable engineering knowledge - patterns, playbooks, and automation assets
 trigger:
-  - /postmortem
-  - /lesson
+  - /session-postmortem
   - when user says "task complete", "finished debugging", "issue resolved"
 ---
 
@@ -28,7 +27,7 @@ Invoke this skill when:
 - A debugging session successfully concludes
 - An incident is resolved
 - A complex feature is shipped
-- User explicitly requests `/postmortem` or `/lesson`
+- User explicitly requests `/session-postmortem`
 
 # EXECUTION PROTOCOL
 

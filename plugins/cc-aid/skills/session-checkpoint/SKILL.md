@@ -1,10 +1,8 @@
 ---
-name: session-key-points
+name: session-checkpoint
 description: Create clean task checkpoint and persist to local memory for session continuity
 trigger:
-  - /checkpoint
-  - /save-state
-  - /session-state
+  - /session-checkpoint
   - when user says "save checkpoint", "save session state", "create checkpoint"
 ---
 
@@ -19,7 +17,7 @@ This skill enables clean session handoffs by distilling complex conversations in
 # WHEN TO TRIGGER
 
 Invoke this skill when:
-- User explicitly requests `/checkpoint`, `/save-state`, or `/session-state`
+- User explicitly requests `/session-checkpoint`
 - User says "save checkpoint", "save session state", "create checkpoint"
 - Before long-running operations where state preservation is valuable
 - When switching contexts but planning to return to current work
@@ -156,7 +154,7 @@ To continue in a clean session, run:
 
 Or use:
 
-  /resume-checkpoint
+  /session-init
 
 To view checkpoint:
 
@@ -197,7 +195,7 @@ After saving, suggest to the user:
 > ```json
 > {
 >   "hooks": {
->     "before_git_push": "claude /checkpoint"
+>     "before_git_push": "claude /session-checkpoint"
 >   }
 > }
 > ```
@@ -209,7 +207,7 @@ After saving, suggest to the user:
 When the user wants to resume from a checkpoint, they can use:
 
 ```
-/resume-checkpoint
+/session-init
 ```
 
 Which should:
@@ -348,18 +346,18 @@ Before saving, verify:
 
 # INTEGRATION WITH OTHER SKILLS
 
-**Relationship to `/postmortem`:**
-- `/checkpoint` = mid-task state preservation
-- `/postmortem` = completed task knowledge extraction
+**Relationship to `/session-postmortem`:**
+- `/session-checkpoint` = mid-task state preservation
+- `/session-postmortem` = completed task knowledge extraction
 
 **Workflow:**
-1. During work: `/checkpoint` to save state
-2. After completion: `/postmortem` to extract patterns
-3. Resume later: `/resume-checkpoint` to continue
+1. During work: `/session-checkpoint` to save state
+2. After completion: `/session-postmortem` to extract patterns
+3. Resume later: `/session-init` to continue
 
 **When to use which:**
-- Use `/checkpoint` when pausing work (lunch, end of day, context switch)
-- Use `/postmortem` when task is complete and you want to capture learnings
+- Use `/session-checkpoint` when pausing work (lunch, end of day, context switch)
+- Use `/session-postmortem` when task is complete and you want to capture learnings
 
 ---
 

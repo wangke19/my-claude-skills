@@ -1,12 +1,9 @@
 ---
-name: init-session
+name: session-init
 description: Initialize coding session from saved checkpoint or fresh start
 trigger:
-  - /init-session
-  - /resume
-  - /continue
-  - /start
-  - when user says "resume session", "continue work", "start session", "init"
+  - /session-init
+  - when user says "continue work", "start session", "init"
 ---
 
 # PURPOSE
@@ -22,7 +19,7 @@ This skill provides clean session startup by:
 # WHEN TO TRIGGER
 
 Invoke this skill when:
-- User explicitly requests `/init-session`, `/resume`, `/continue`, or `/start`
+- User explicitly requests `/session-init`
 - User says "resume session", "continue work", "start session", "init"
 - Beginning of a new Claude Code session where state restoration is needed
 - User wants to pick up where they left off
@@ -151,7 +148,7 @@ Would you like me to create a checkpoint before starting?
 
 This will save the current state to .ai-session/STATE.md for future resumption.
 
-(You can also manually run /checkpoint anytime)
+(You can also manually run /session-checkpoint anytime)
 ```
 
 ---
@@ -180,7 +177,7 @@ The checkpoint at .ai-session/STATE.md is missing required sections.
 
 Options:
 1. Provide task description to start fresh
-2. Fix checkpoint manually and re-run /init-session
+2. Fix checkpoint manually and re-run /session-init
 3. View checkpoint: cat .ai-session/STATE.md
 ```
 
@@ -307,7 +304,7 @@ The checkpoint at .ai-session/STATE.md is missing required section: NEXT ACTION
 
 Options:
 1. Provide task description to start fresh
-2. Fix checkpoint manually and re-run /init-session
+2. Fix checkpoint manually and re-run /session-init
 3. View checkpoint: cat .ai-session/STATE.md
 
 What would you like to do?
@@ -319,26 +316,26 @@ What would you like to do?
 
 **Session lifecycle:**
 
-1. **Start session:** `/init-session` (this skill)
-2. **During work:** `/checkpoint` to save state
-3. **End work:** `/checkpoint` before logging off
-4. **Resume work:** `/init-session` loads checkpoint
-5. **Complete task:** `/postmortem` to extract knowledge
+1. **Start session:** `/session-init` (this skill)
+2. **During work:** `/session-checkpoint` to save state
+3. **End work:** `/session-checkpoint` before logging off
+4. **Resume work:** `/session-init` loads checkpoint
+5. **Complete task:** `/session-postmortem` to extract knowledge
 
 **Workflow:**
 
 ```
 Day 1:
-- /init-session (fresh start)
+- /session-init (fresh start)
 - Work on task
-- /checkpoint (save before lunch)
-- /init-session (resume after lunch)
-- /checkpoint (save at end of day)
+- /session-checkpoint (save before lunch)
+- /session-init (resume after lunch)
+- /session-checkpoint (save at end of day)
 
 Day 2:
-- /init-session (resume from yesterday)
+- /session-init (resume from yesterday)
 - Complete task
-- /postmortem (extract learnings)
+- /session-postmortem (extract learnings)
 ```
 
 ---
