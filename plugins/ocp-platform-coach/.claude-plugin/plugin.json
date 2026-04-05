@@ -1,0 +1,8 @@
+{
+  "name": "ocp-platform-coach",
+  "description": "Deep engineering learning coach for Kubernetes, OpenShift, HyperShift, operators, and platform debugging",
+  "version": "1.0.0",
+  "author": {
+    "name": "kewang"
+  }
+}

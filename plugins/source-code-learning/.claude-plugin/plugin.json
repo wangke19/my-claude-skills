@@ -1,0 +1,8 @@
+{
+  "name": "source-code-learning",
+  "description": "Source code walkthrough, architecture tracing, call graph analysis, and design pattern extraction for large codebases",
+  "version": "1.0.0",
+  "author": {
+    "name": "kewang"
+  }
+}

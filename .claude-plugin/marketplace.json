@@ -33,6 +33,24 @@
       "source": "./plugins/ci",
       "description": "CI/CD helpers for Prow jobs and OpenShift CI",
       "version": "1.0.0"
+    },
+    {
+      "name": "learning-coach",
+      "source": "./plugins/learning-coach",
+      "description": "Structured learning and step-by-step coaching for technical topics",
+      "version": "1.0.0"
+    },
+    {
+      "name": "ocp-platform-coach",
+      "source": "./plugins/ocp-platform-coach",
+      "description": "Deep engineering learning coach for Kubernetes, OpenShift, HyperShift, operators, and platform debugging",
+      "version": "1.0.0"
+    },
+    {
+      "name": "source-code-learning",
+      "source": "./plugins/source-code-learning",
+      "description": "Source code walkthrough, architecture tracing, call graph analysis, and design pattern extraction",
+      "version": "1.0.0"
     }
   ]
 }
