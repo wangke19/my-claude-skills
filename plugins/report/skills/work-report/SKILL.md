@@ -78,44 +78,66 @@ elif "yearly" in user_request or "year" in user_request:
     report_type = "yearly"
 
 # Get user information from environment variables
-# JENKINS_USER_ID - Used for Jira username (e.g., "kewang")
+# JIRA_USERNAME - Full email used for Jira JQL (e.g., "kewang@redhat.com") — PREFERRED
+# JENKINS_USER_ID - Short username fallback (e.g., "kewang") — may not work on Jira Cloud
 # GITHUB_USER_ID - Used for GitHub username (e.g., "wangke19")
-jira_username = os.environ.get("JENKINS_USER_ID", "currentUser()")
+jira_username = os.environ.get("JIRA_USERNAME") or os.environ.get("JENKINS_USER_ID")
 github_username = os.environ.get("GITHUB_USER_ID", "@me")
 
-# Note: If environment variables are not set, fallback to:
-# - "currentUser()" for Jira (uses authenticated user)
-# - "@me" for GitHub (uses authenticated user)
+# CRITICAL: For Jira Cloud (*.atlassian.net), always use the email address in JQL,
+# not the short username. Short usernames like "kewang" silently return 0 results.
+# Use quoted email: assignee = "kewang@redhat.com"
+# Fallback to currentUser() only if no email is available.
+if not jira_username:
+    jira_jql_user = "currentUser()"
+elif "@" in jira_username:
+    jira_jql_user = f'"{jira_username}"'  # email → quoted string in JQL
+else:
+    jira_jql_user = "currentUser()"  # short username unreliable, use currentUser()
 ```
 
 ### Step 2: Calculate Date Range
 
 ```python
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-today = datetime.now()
-report_date = today.strftime("%Y-%m-%d")
+# CRITICAL: User is in CST (UTC+8). Jira JQL dates are interpreted as UTC.
+# To cover "April 7 CST", we need UTC range: 2026-04-06 16:00 → 2026-04-07 16:00
+# Always convert local date → UTC window using local UTC offset.
 
-# Calculate start date based on report type
+local_utc_offset_hours = 8  # CST = UTC+8; adjust if user is in a different timezone
+
+today_local = datetime.now()  # local time
+report_date = today_local.strftime("%Y-%m-%d")  # YYYY-MM-DD in local date
+
+# UTC window start = local date 00:00 minus offset → previous UTC day at 16:00 (for UTC+8)
+utc_start = today_local.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=local_utc_offset_hours)
+utc_end   = utc_start + timedelta(days=1)
+utc_start_str = utc_start.strftime("%Y-%m-%d %H:%M")
+utc_end_str   = utc_end.strftime("%Y-%m-%d %H:%M")
+
+# For daily: use UTC-bounded range. For longer periods use simpler relative syntax.
 # IMPORTANT: Include QA Contact field in Jira query to capture issues you're testing
 if report_type == "daily":
-    start_date = report_date
-    jira_jql = f"updated >= '{report_date}' AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    jira_jql = (
+        f"updated >= '{utc_start_str}' AND updated < '{utc_end_str}' AND "
+        f"(assignee = {jira_jql_user} OR reporter = {jira_jql_user} OR 'QA Contact' = {jira_jql_user})"
+    )
     github_query = f"involves:{github_username} updated:>={report_date}"
 
 elif report_type == "weekly":
-    start_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
-    jira_jql = f"updated >= -7d AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    start_date = (today_local - timedelta(days=7)).strftime("%Y-%m-%d")
+    jira_jql = f"updated >= -7d AND (assignee = {jira_jql_user} OR reporter = {jira_jql_user} OR 'QA Contact' = {jira_jql_user})"
     github_query = f"involves:{github_username} updated:>={start_date}"
 
 elif report_type == "quarterly":
-    start_date = (today - timedelta(days=90)).strftime("%Y-%m-%d")
-    jira_jql = f"updated >= -90d AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    start_date = (today_local - timedelta(days=90)).strftime("%Y-%m-%d")
+    jira_jql = f"updated >= -90d AND (assignee = {jira_jql_user} OR reporter = {jira_jql_user} OR 'QA Contact' = {jira_jql_user})"
     github_query = f"involves:{github_username} updated:>={start_date}"
 
 elif report_type == "yearly":
-    start_date = (today - timedelta(days=365)).strftime("%Y-%m-%d")
-    jira_jql = f"updated >= -365d AND (assignee = {jira_username} OR reporter = {jira_username} OR 'QA Contact' = {jira_username})"
+    start_date = (today_local - timedelta(days=365)).strftime("%Y-%m-%d")
+    jira_jql = f"updated >= -365d AND (assignee = {jira_jql_user} OR reporter = {jira_jql_user} OR 'QA Contact' = {jira_jql_user})"
     github_query = f"involves:{github_username} updated:>={start_date}"
 ```
 
@@ -125,8 +147,11 @@ elif report_type == "yearly":
 
 **Get Jira username from environment:**
 ```javascript
-// JENKINS_USER_ID is the standard environment variable for Jira username
-const jiraUsername = process.env.JENKINS_USER_ID || "currentUser()";
+// JIRA_USERNAME (email) is the correct identifier for Jira Cloud JQL.
+// JENKINS_USER_ID (short name like "kewang") silently returns 0 results on Jira Cloud.
+// Always prefer the email; fall back to currentUser() if unavailable.
+const jiraEmail = process.env.JIRA_USERNAME;  // e.g. "kewang@redhat.com"
+const jiraJqlUser = jiraEmail ? `"${jiraEmail}"` : "currentUser()";
 const githubUsername = process.env.GITHUB_USER_ID || "@me";
 ```
 
@@ -181,24 +206,44 @@ const githubResult = await mcp__github__search_pull_requests({
 
 **Transform GitHub response:**
 
+After deduplicating and verifying actual Apr-N activity per the gh CLI steps above,
+set the `section` field on each PR so the report generator classifies them correctly.
+
 ```javascript
-const githubPRs = githubResult.items.map(pr => {
-    // Extract repo from URL: https://github.com/owner/repo/pull/123
-    const htmlUrl = pr.html_url || "";
-    const repoParts = htmlUrl.replace("https://github.com/", "").split("/pull/");
-    const repo = repoParts[0] || "unknown";
+// CRITICAL: The report generator uses `section` (NOT `tags`) to classify open PRs.
+// Without section="working_on", open PRs are silently dropped from 🦀 Working On.
+//
+// Rules for setting section:
+//   "working_on" → I authored/commented/pushed on this PR TODAY
+//   "next"       → I am reviewer/assignee but have NOT commented yet
+//   (omit)       → merged PRs don't need section; merged_at field handles them
+
+const githubPRs = verifiedPRs.map(pr => {
+    const htmlUrl = pr.url || "";
+    const repo = htmlUrl.replace("https://github.com/", "").split("/pull/")[0] || "unknown";
+    const isMerged = pr.state === "merged";
+
+    // Determine section for open PRs
+    let section = undefined;
+    if (!isMerged) {
+        if (pr.iAmAuthor || pr.iCommentedToday || pr.iPushedToday) {
+            section = "working_on";
+        } else if (pr.iAmReviewer && !pr.iCommentedToday) {
+            section = "next";
+        }
+    }
 
     return {
-        repo: repo,
+        repo,
         number: pr.number,
         title: pr.title,
         url: htmlUrl,
-        state: pr.state,
-        updated: pr.updated_at,
-        draft: pr.draft || false,
-        merged_at: pr.merged_at || null,
-        labels: (pr.labels || []).map(label => label.name),
-        comments: pr.comments || 0
+        state: isMerged ? "merged" : "open",
+        merged_at: isMerged ? pr.closedAt : null,
+        draft: pr.isDraft || false,
+        is_author: pr.iAmAuthor || false,
+        has_my_comments: pr.iCommentedToday || false,
+        ...(section ? { section } : {})
     };
 });
 
@@ -607,24 +652,34 @@ generate yearly report      → Last 365 days
 When implementing this skill:
 
 - [ ] Parse report type from user request (daily/weekly/quarterly/yearly)
-- [ ] Calculate correct date range based on type
+- [ ] Read `JIRA_USERNAME` env var (email) for JQL — NOT `JENKINS_USER_ID` (short name)
+- [ ] For daily reports, convert local date to UTC window (CST=UTC+8: use 16:00 prev day → 16:00 today)
 - [ ] Load Jira MCP tool via ToolSearch
-- [ ] Fetch Jira issues with correct JQL query
-- [ ] Transform Jira response to expected format
-- [ ] Load GitHub MCP tool via ToolSearch
-- [ ] Fetch GitHub PRs with correct search query
-- [ ] Transform GitHub response to expected format
+- [ ] Fetch Jira issues with correct JQL (email-based user, UTC-bounded date range)
+- [ ] Transform Jira response to expected format (has_my_activity, is_assignee, is_reporter)
+- [ ] Use `gh` CLI (NOT GitHub MCP) for PR search — run all 4 searches, deduplicate
+- [ ] Verify actual user activity on report date per PR (comments, reviews, authorship)
+- [ ] Set `section: "working_on"` on open PRs with activity (NOT `tags`)
+- [ ] Set `section: "next"` on PRs where user is reviewer but hasn't commented
 - [ ] Load work-report-generator MCP tool via ToolSearch
 - [ ] Call generator with transformed data
 - [ ] Handle errors gracefully (empty data if one source fails)
 - [ ] Report success with file paths and summary
-- [ ] Verify all three output files were created
+
+## Known Bugs (Fixed)
+
+| # | Bug | Root Cause | Fix |
+|---|-----|------------|-----|
+| 1 | Jira returned 0 results | Used `JENKINS_USER_ID` (`kewang`) in JQL — Jira Cloud requires email | Use `JIRA_USERNAME` (`kewang@redhat.com`) as quoted string in JQL |
+| 2 | Jira missed issues at day boundary | JQL `updated >= 'YYYY-MM-DD'` uses UTC midnight; user is in CST (UTC+8) | Use UTC window: `updated >= 'YYYY-MM-DD 16:00' AND updated < 'YYYY-MM-DD+1 16:00'` |
+| 3 | Open PRs dropped from report | Passed `tags: ["working_on"]` — generator ignores `tags`, requires `section` field | Set `section: "working_on"` for open PRs with activity today |
 
 ## Tips
 
-1. **Always use ToolSearch first:** Load MCP tools before calling them
-2. **Handle failures gracefully:** One source failing shouldn't break the whole report
-3. **Transform data carefully:** Match the exact format expected by work-report-generator
-4. **Default to daily:** If user doesn't specify, generate daily report
-5. **Show file paths:** Users want to know where reports are saved
-6. **Include summary:** Show count of issues and PRs processed
+1. **Jira username = email:** `JIRA_USERNAME` env var holds the email; always quote it in JQL
+2. **Timezone matters for daily:** Always use a UTC-bounded window, not a plain date
+3. **`section` not `tags`:** The report generator classifies open PRs by `section` field only
+4. **Always use ToolSearch first:** Load MCP tools before calling them
+5. **gh CLI for GitHub:** GitHub MCP is not available; use `gh search prs` + verify activity
+6. **Handle failures gracefully:** One source failing shouldn't break the whole report
+7. **Default to daily:** If user doesn't specify, generate daily report
