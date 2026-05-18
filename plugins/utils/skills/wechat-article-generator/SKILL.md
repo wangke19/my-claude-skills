@@ -182,88 +182,59 @@ data_uri = f"data:image/svg+xml,{svg_compact}"
 
 For body illustrations (architecture diagrams, flowcharts), create inline SVG elements within the HTML.
 
-**⚠️ 竖屏优先原则**：手机竖屏是主要阅读场景。SVG 配图尽量用竖版布局（窄宽高个），避免横版。横版 SVG 在手机上会被缩小，文字显得很小。
-- ✅ 推荐：viewBox 宽 680，高 300-500，内容竖排列表
-- ❌ 避免：viewBox 宽 750+，多列横排，在手机上文字缩到看不清
-
-**Architecture Diagram Pattern (use inside `<section style="margin:0;padding:0;line-height:1">` wrapper):**
+**Architecture Diagram Pattern:**
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 440" width="100%"
-     style="display:block;vertical-align:bottom;margin:4px auto 8px;border-radius:8px;font-family:Microsoft YaHei,PingFang SC,sans-serif">
-  <!-- Background -->
-  <rect width="680" height="440" fill="#f8f9fb" rx="8"/>
-  <rect x="1" y="1" width="678" height="438" fill="none" stroke="#e0e3e8" stroke-width="1" rx="8"/>
-  <!-- Title (font-size="20", larger than body 17px for mobile readability) -->
-  <text x="340" y="35" text-anchor="middle" font-size="20" font-weight="600" fill="#333">架构图标题</text>
-  <!-- Row 1 -->
-  <rect x="20" y="60" width="190" height="60" rx="6" fill="#e3f2fd" stroke="#1a73e8" stroke-width="2"/>
-  <text x="115" y="95" text-anchor="middle" font-size="20" fill="#1565c0">模块 A</text>
-  <!-- Arrow down from A -->
-  <line x1="115" y1="120" x2="115" y2="145" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- Row 2 -->
-  <rect x="20" y="150" width="190" height="60" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
-  <text x="115" y="185" text-anchor="middle" font-size="20" fill="#2e7d32">模块 B</text>
-  <rect x="235" y="150" width="190" height="60" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
-  <text x="330" y="185" text-anchor="middle" font-size="20" fill="#e65100">模块 C</text>
-  <rect x="450" y="150" width="190" height="60" rx="6" fill="#fce4ec" stroke="#c2185b" stroke-width="2"/>
-  <text x="545" y="185" text-anchor="middle" font-size="20" fill="#c2185b">模块 D</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" width="680" height="320"
+     style="background:#fafafa;border-radius:10px;border:1px solid #e8e8e8;display:block;margin:20px auto;font-family:Microsoft YaHei,PingFang SC,sans-serif">
+  <!-- Title -->
+  <text x="340" y="30" text-anchor="middle" font-size="16" font-weight="600" fill="#333">架构图标题</text>
+  <!-- Boxes -->
+  <rect x="20" y="60" width="140" height="60" rx="6" fill="#e3f2fd" stroke="#1a73e8" stroke-width="2"/>
+  <text x="90" y="95" text-anchor="middle" font-size="13" fill="#1565c0">模块 A</text>
+  <rect x="270" y="60" width="140" height="60" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="340" y="95" text-anchor="middle" font-size="13" fill="#2e7d32">模块 B</text>
+  <rect x="520" y="60" width="140" height="60" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="590" y="95" text-anchor="middle" font-size="13" fill="#e65100">模块 C</text>
+  <!-- Arrows -->
+  <line x1="160" y1="90" x2="270" y2="90" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="410" y1="90" x2="520" y2="90" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
   <!-- Arrow marker def -->
   <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#666"/></marker></defs>
-  <!-- Connecting lines row 2 to row 3 -->
-  <line x1="115" y1="210" x2="115" y2="260" stroke="#999" stroke-width="1.5" stroke-dasharray="4,2"/>
-  <line x1="330" y1="210" x2="330" y2="260" stroke="#999" stroke-width="1.5"/>
-  <line x1="545" y1="210" x2="545" y2="260" stroke="#999" stroke-width="1.5" stroke-dasharray="4,2"/>
-  <!-- Row 3 -->
-  <rect x="20" y="260" width="190" height="60" rx="6" fill="#e1f5fe" stroke="#0277bd" stroke-width="2"/>
-  <text x="115" y="295" text-anchor="middle" font-size="20" fill="#0277bd">模块 E</text>
-  <rect x="235" y="260" width="190" height="60" rx="6" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
-  <text x="330" y="295" text-anchor="middle" font-size="20" fill="#7b1fa2">模块 F</text>
-  <rect x="450" y="260" width="190" height="60" rx="6" fill="#fff8e1" stroke="#f9a825" stroke-width="2"/>
-  <text x="545" y="295" text-anchor="middle" font-size="20" fill="#f9a825">模块 G</text>
-  <!-- Final output -->
-  <line x1="115" y1="320" x2="115" y2="360" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
-  <rect x="20" y="360" width="640" height="60" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
-  <text x="340" y="395" text-anchor="middle" font-size="20" fill="#2e7d32">输出结果</text>
+  <!-- Bottom box -->
+  <rect x="270" y="200" width="140" height="60" rx="6" fill="#fce4ec" stroke="#c2185b" stroke-width="2"/>
+  <text x="340" y="235" text-anchor="middle" font-size="13" fill="#c2185b">数据库</text>
+  <!-- Connecting lines to bottom -->
+  <line x1="90" y1="120" x2="90" y2="200" stroke="#999" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <line x1="340" y1="120" x2="340" y2="200" stroke="#999" stroke-width="1.5"/>
+  <line x1="590" y1="120" x2="590" y2="200" stroke="#999" stroke-width="1.5" stroke-dasharray="4,2"/>
 </svg>
 ```
 
-**Flowchart Pattern (use inside `<section style="margin:0;padding:0;line-height:1">` wrapper):**
+**Flowchart Pattern (for process diagrams):**
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 520" width="100%"
-     style="display:block;vertical-align:bottom;margin:4px auto 8px;border-radius:8px;font-family:Microsoft YaHei,PingFang SC,sans-serif">
-  <rect width="680" height="520" fill="#f8f9fb" rx="8"/>
-  <rect x="1" y="1" width="678" height="518" fill="none" stroke="#e0e3e8" stroke-width="1" rx="8"/>
-  <!-- Start node -->
-  <circle cx="340" cy="40" r="25" fill="#e3f2fd" stroke="#1a73e8" stroke-width="2"/>
-  <text x="340" y="46" text-anchor="middle" font-size="20" fill="#1565c0">开始</text>
-  <!-- Arrow -->
-  <line x1="340" y1="65" x2="340" y2="90" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400"
+     style="background:#fafafa;border-radius:10px;border:1px solid #e8e8e8;display:block;margin:20px auto">
+  <!-- Nodes: rounded rectangles for processes, diamonds for decisions -->
+  <!-- Example: Start -> Decision -> Process A / Process B -> End -->
+  <circle cx="300" cy="40" r="25" fill="#e3f2fd" stroke="#1a73e8" stroke-width="2"/>
+  <text x="300" y="46" text-anchor="middle" font-size="14" fill="#1565c0">开始</text>
   <!-- Decision diamond -->
-  <polygon points="340,95 400,145 340,195 280,145" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
-  <text x="340" y="150" text-anchor="middle" font-size="20" fill="#e65100">判断</text>
-  <!-- Yes branch down -->
-  <line x1="340" y1="195" x2="340" y2="220" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- No branch left -->
-  <line x1="280" y1="145" x2="180" y2="145" stroke="#666" stroke-width="2"/>
-  <text x="215" y="135" font-size="20" fill="#666">否</text>
-  <line x1="180" y1="145" x2="180" y2="220" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- Process A (yes path) -->
-  <rect x="260" y="220" width="160" height="60" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
-  <text x="340" y="255" text-anchor="middle" font-size="20" fill="#2e7d32">流程 A</text>
-  <!-- Process B (no path) -->
-  <rect x="80" y="220" width="160" height="60" rx="8" fill="#e3f2fd" stroke="#1a73e8" stroke-width="2"/>
-  <text x="160" y="255" text-anchor="middle" font-size="20" fill="#1565c0">流程 B</text>
-  <!-- Merge back -->
-  <line x1="340" y1="280" x2="340" y2="320" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
-  <line x1="160" y1="280" x2="160" y2="320" stroke="#666" stroke-width="2"/>
-  <line x1="160" y1="320" x2="340" y2="320" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
-  <!-- End node -->
-  <rect x="260" y="320" width="160" height="60" rx="8" fill="#fce4ec" stroke="#c2185b" stroke-width="2"/>
-  <text x="340" y="355" text-anchor="middle" font-size="20" fill="#c2185b">结束</text>
+  <polygon points="300,100 350,145 300,190 250,145" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="300" y="150" text-anchor="middle" font-size="12" fill="#e65100">判断</text>
+  <!-- Process boxes -->
+  <rect x="80" y="230" width="120" height="60" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="140" y="265" text-anchor="middle" font-size="13" fill="#2e7d32">流程 A</text>
+  <rect x="400" y="230" width="120" height="60" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="460" y="265" text-anchor="middle" font-size="13" fill="#2e7d32">流程 B</text>
+  <!-- Arrows with labels -->
+  <line x1="300" y1="65" x2="300" y2="100" stroke="#666" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- Yes/No branches -->
+  <line x1="250" y1="145" x2="140" y2="200" stroke="#666" stroke-width="2"/>
+  <text x="180" y="175" font-size="11" fill="#666">是</text>
+  <line x1="350" y1="145" x2="460" y2="200" stroke="#666" stroke-width="2"/>
+  <text x="420" y="175" font-size="11" fill="#666">否</text>
   <!-- Arrow marker def -->
   <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#666"/></marker></defs>
-  <!-- Note below -->
-  <text x="340" y="430" text-anchor="middle" font-size="16" fill="#888">* 竖屏布局适配手机阅读</text>
 </svg>
 ```
 
@@ -456,17 +427,17 @@ For body illustrations (architecture diagrams, flowcharts), create inline SVG el
 </head>
 <body>
 
-<!-- COPY HINT (inline style — WeChat strips CSS classes) -->
-<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin-bottom:28px;font-size:14px;color:#856404">
+<!-- COPY HINT -->
+<div class="copy-hint">
   <strong>📋 复制提示：</strong>打开此页面，全选（Ctrl+A / Cmd+A）并复制（Ctrl+C / Cmd+C），然后直接粘贴到微信公众号编辑器中，格式完整保留。
 </div>
 
 <!-- COVER IMAGE (data URI from SVG) -->
-<img style="width:100%;height:auto;border-radius:8px;margin-bottom:32px;display:block" src="data:image/svg+xml,[SVG_CONTENT]" alt="封面图">
+<img class="cover-image" src="data:image/svg+xml,[SVG_CONTENT]" alt="封面图">
 
 <!-- ARTICLE HEADER -->
 <h1>[Article Title]</h1>
-<p style="font-size:13px;color:#888">[Author] · [Date]</p>
+<p class="small">[Author] · [Date]</p>
 <hr>
 
 <!-- BODY CONTENT -->
@@ -474,10 +445,10 @@ For body illustrations (architecture diagrams, flowcharts), create inline SVG el
 
 <!-- FOOTER -->
 <hr>
-<p style="text-align:center">
+<p class="text-center">
   <strong>项目地址</strong>：<a href="...">...</a>
 </p>
-<p style="text-align:center;font-size:13px;color:#888">欢迎交流与转载，注明出处即可。</p>
+<p class="text-center small">欢迎交流与转载，注明出处即可。</p>
 
 </body>
 </html>
@@ -508,7 +479,7 @@ Convert markdown elements to HTML:
 
 **For code blocks with language hint**: Keep syntax highlighting classes clean (no external library needed—use CSS color directly in spans).
 
-**For inline SVG diagrams**: Place inside `<section style="margin:0;padding:0;line-height:1">` with the SVG itself handling border-radius and background. See Mistake 9 for the complete pattern.
+**For inline SVG diagrams**: Place inside `<div class="illustration">...</div>` with optional `<p class="illustration-caption">图注</p>`.
 
 ### Step 6: Output the File
 
@@ -556,146 +527,6 @@ font-family: -apple-system, BlinkMacSystemFont,
 
 **Solution**: Use solid colors with alpha simulated via opacity only for entire elements, or avoid transparency in foreground text/borders.
 
-### ❌ Mistake 7: CSS class-based styling
-**Problem**: WeChat editor strips `<style>` blocks and CSS classes on paste. All `.highlight-box`, `.error-box`, `.copy-hint`, `.illustration`, `.text-center`, `.small` etc. lose their visual styling — colored boxes become plain text, hints lose background, illustrations lose borders.
-
-**Solution**: Use inline `style=""` attributes on every element that has visual styling. Never rely on CSS classes for visual presentation. Base typography (`body`, `h1`, `h2`, `p`, `code`, `pre`, `blockquote`, `table`) can use `<style>` since they're standard enough to survive, but any custom decorative element MUST use inline styles.
-
-**Before:**
-```html
-<div class="highlight-box">Content</div>
-<div class="copy-hint">Hint text</div>
-<div class="illustration">SVG diagram</div>
-<p class="small">Small text</p>
-```
-
-**After:**
-```html
-<div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:14px 18px;margin:18px 0">Content</div>
-<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin-bottom:28px;font-size:14px;color:#856404">Hint text</div>
-<div style="background:#fafafa;border:1px solid #e8e8e8;border-radius:10px;padding:20px;margin:20px 0;text-align:center">SVG diagram</div>
-<p style="font-size:13px;color:#888">Small text</p>
-```
-
-### ❌ Mistake 8: Chinese full-width colon causes line breaks
-**Problem**: In list items (`<li>`), the Chinese full-width colon `：` is treated as a line break point by the WeChat editor. Content like `单进程闭环：Agent Loop` breaks into two lines at the colon.
-
-**Solution**: Wrap Chinese colons `：` in `<span style="display:inline">：</span>` within list items and other tight inline contexts.
-
-**Before:**
-```html
-<li><strong>单进程闭环：</strong>Agent Loop</li>
-```
-
-**After:**
-```html
-<li><strong>单进程闭环</strong><span style="display:inline">：</span>Agent Loop</li>
-```
-
-### ❌ Mistake 9: SVG 配图和上下文之间出现大片空白（基线间隙）
-**Problem**: SVG 和前后文字之间出现很大空白，即使设了 `margin:0` 也没用。
-
-**Root cause**（3 个叠加）：
-1. **SVG 默认 inline-block + 基线对齐**：SVG 作为行内块元素，按文字基线对齐，下方会留"字母下行空间"（descender gap），形成底部大片空白。**这是最主要原因。调 margin 对它完全无效。**
-2. **父元素 line-height / margin 自带间距**：`<p>`、`<section>`、`<h2>` 有默认 margin。
-3. **SVG 写死 width/height**：固定尺寸在不同屏幕上产生额外空间。
-
-**已尝试但失败的方案**：
-| 方案 | 为什么失败 |
-|------|-----------|
-| `margin-bottom:0` on `<p>` | 微信渲染器忽略内联 margin 覆盖 |
-| `<div>` 替代 `<p>` | 微信给所有 block 元素加默认 margin |
-| 负 margin `-10px` | 在微信里无效 |
-| section `margin:2px 0` | 邻居元素的默认 margin 不受影响 |
-
-**✅ Solution（验证有效）**：
-```html
-<!-- section 清零 margin/padding，line-height:1 -->
-<section style="margin:0;padding:0;line-height:1">
-  <!-- SVG 关键：display:block + vertical-align:bottom + width="100%"（不写死 height） -->
-  <svg viewBox="0 0 680 320" width="100%"
-       style="display:block;vertical-align:bottom;margin:4px auto 8px;border-radius:8px">
-    <rect width="680" height="320" fill="#f8f9fb" rx="8"/>...
-  </svg>
-</section>
-```
-
-**三个关键修复**：
-1. `vertical-align:bottom` — **消除基线间隙**（最重要！）
-2. `width="100%"` 不写死 height — SVG 自适应容器
-3. `display:block` — 确保 SVG 是块级元素
-
-**⚠️ 重要约束：width="100%" 和 height 不能同时写死**
-```html
-<!-- ✅ 正确：只有 width="100%"，没有 height 属性 -->
-<svg viewBox="0 0 680 320" width="100%" ...>
-
-<!-- ❌ 错误：同时写了 width="100%" 和 height="340" -->
-<svg viewBox="0 0 680 340" width="100%" height="340" ...>
-```
-
-**⚠️ 子任务修改内容时 SVG 属性容易被覆盖**
-
-当用 patch 工具修改文章 HTML 时，如果子任务修改了正文段落但没有同步保留 SVG 属性，SVG 会被还原成旧版本。**每次内容修改后必须重新验证 SVG 属性**：
-- `vertical-align:bottom` 是否保留？
-- `width="100%"` 是否保留？
-- `height` 属性是否已删除？
-- `section style="margin:0;padding:0;line-height:1"` 是否保留？
-
-**快速验证正则**：
-```python
-import re
-svg_sections = re.findall(r'<section[^>]*>.*?</section>', html, re.DOTALL)
-for i, s in enumerate(svg_sections):
-    has_va = 'vertical-align:bottom' in s
-    has_width100 = 'width="100%"' in s
-    has_section_clear = re.search(r'<section style="[^"]*margin:0[^"]*line-height:1', s)
-    print(f"SVG {i+1}: va={has_va}, width100={has_width100}, section_clear={bool(has_section_clear)}")
-```
-
-### ❌ Mistake 10: SVG 字号太小或文字溢出
-**Problem**: SVG 内用 11-13px 字号在手机上几乎看不清。加大字号后文字溢出背景 `<rect>`（只改了 font-size 没调 rect 的 width/height 和坐标）。
-
-**Solution**:
-1. SVG 内所有文字统一 `font-size="20"`（比正文 17px 大，确保微信缩放后仍清晰可读）
-2. **放大 font-size 时必须同步调整背景矩形尺寸**：rect 的 width/height 和内部文字坐标都要按比例增加
-
-**Before (overflow):**
-```html
-<rect x="30" y="48" width="190" height="60"/>  <!-- 190×60 够 font-size="17" -->
-<text x="125" y="72" font-size="20">web + memory + skills</text>  <!-- ❌ 文字溢出 -->
-```
-
-**After (correct):**
-```html
-<rect x="25" y="50" width="220" height="65"/>  <!-- 220×65 够 font-size="20" -->
-<text x="135" y="78" font-size="20">web + memory + skills</text>  <!-- ✅ 文字在 rect 内 -->
-```
-
-**Rule of thumb**: 中文字符在 font-size="20" 下约 20px 宽。"web + memory + skills" ≈ 20 个字符 ≈ 200px 宽。rect 至少需要 220px（加 padding）。
-
-### ❌ Mistake 11: SVG 配图用外层 div 包装
-**Problem**: 用 `<div>` 包裹 SVG 配图会产生：
-- 双层背景重叠（div 的 background + SVG rect 背景）
-- `overflow:hidden` + `padding` 裁剪内容
-
-**Solution**: SVG 自己处理 border-radius + margin，内部 `<rect>` 做背景，无需 wrapper div。
-
-**Before (broken):**
-```html
-<div style="background:#fafafa;border-radius:10px;padding:20px;overflow:hidden">
-  <svg viewBox="0 0 680 260"><rect width="680" height="260" fill="#fafafa"/>...</svg>
-</div>
-```
-
-**After (clean):**
-```html
-<svg viewBox="0 0 680 260" width="100%"
-     style="display:block;vertical-align:bottom;margin:4px auto 8px;border-radius:8px">
-  <rect width="680" height="260" fill="#fafafa" rx="8"/>...
-</svg>
-```
-
 ## Output Checklist
 
 Before delivering the HTML file, verify:
@@ -710,11 +541,6 @@ Before delivering the HTML file, verify:
 - [ ] Table cells have `vertical-align: top`
 - [ ] WeChat copy hint is present at the top
 - [ ] Font stack covers Chinese on all platforms
-- [ ] All decorative elements (colored boxes, hints, illustrations, captions, utility classes) use inline `style=""` — no CSS classes for visual styling
-- [ ] Chinese full-width colons `：` in `<li>` items wrapped in `<span style="display:inline">：</span>`
-- [ ] SVG `width="100%"` ✓ — 固定 `height` 属性已删除（**两者不能并存！**）
-- [ ] SVG has `vertical-align:bottom` to eliminate baseline gap
-- [ ] SVG wrapped in `<section style="margin:0;padding:0;line-height:1">`
 - [ ] File name ends in `.html`
 
 ## Example Output
