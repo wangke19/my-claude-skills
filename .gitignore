@@ -24,3 +24,7 @@ __pycache__/
 
 # Generated files
 *.log
+
+# Bun lock files
+bun.lock
+bun.lockb
